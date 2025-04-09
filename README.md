@@ -1,2 +1,1 @@
-# manzil-ISL
-Bible app for deaf community
+# Manzil-ISL
