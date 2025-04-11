@@ -54,7 +54,7 @@ const VideoPanel = ({ book = "3jn", chapter = 1, verse = 1 }: VideoPanelProps) =
             className="text-blue-500 border-blue-500"
             onClick={navigateToPrevVerse}
           >
-            previous verse
+            previous chapter
           </Button>
           <Button 
             variant="outline" 

@@ -1,44 +1,22 @@
-// Drawer.tsx
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import bibleBooksData from "@/assets/books"; // Assuming you have a bibleBooks data file
 
 // Define Bible book types
 interface Book {
   id: string;
   name: string;
-  testament: "old" | "new";
+  testament: string;
   chapters: number;
   verses: Record<number, number>;
 }
 
-// Bible data - currently just showing the 3 John books
-const bibleBooks: Book[] = [
-  {
-    id: "1jn",
-    name: "1 John",
-    testament: "new",
-    chapters: 5,
-    verses: { 1: 10, 2: 29, 3: 24, 4: 21, 5: 21 }
-  },
-  {
-    id: "2jn",
-    name: "2 John",
-    testament: "new",
-    chapters: 1,
-    verses: { 1: 13 }
-  },
-  {
-    id: "3jn",
-    name: "3 John",
-    testament: "new",
-    chapters: 1,
-    verses: { 1: 15 }
-  }
-];
+// Bible data
+const bibleBooks: Book[] = bibleBooksData as Book[];
 
 const Drawer = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +35,6 @@ const Drawer = () => {
     setFilteredBooks(filtered);
   }, [searchQuery]);
 
-  // Handle book selection
   const handleBookSelect = (book: Book) => {
     setSelectedBook(book);
     setSelectedChapter(null);
@@ -102,7 +79,7 @@ const Drawer = () => {
 
   // Render the search box
   const renderSearchBox = () => (
-    <div className="relative mb-4">
+    <div className="relative mb-6">
       <Input
         type="text"
         placeholder="Search Books"
@@ -121,122 +98,123 @@ const Drawer = () => {
   );
 
   return (
-    <div className="h-full flex flex-col p-4">
-      {/* Search Box */}
+    <div className="p-4">
+
       {renderSearchBox()}
 
-      {/* Selection Controls */}
-            <div className="flex mb-4 space-x-2">
-              <Select value={selectedBook?.id || ""} onValueChange={handleBookSelect}>
-                <SelectTrigger className="w-24">
-                  <SelectValue placeholder="Book" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredBooks.map((book) => (
-                    <SelectItem key={book.id} value={book.id}>
-                      {book.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-      
-              <Select
-                value={selectedChapter?.toString() || "1"}
-                onValueChange={(value) => setSelectedChapter(parseInt(value))}
-                disabled={!selectedBook}
-              >
-                <SelectTrigger className="w-24">
-                  <SelectValue placeholder="Chapter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedBook && Array.from({ length: selectedBook.chapters }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                      {i + 1}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-      
-              <Select
-                value={selectedVerse?.toString() || "1"}
-                onValueChange={(value) => setSelectedVerse(parseInt(value))}
-                disabled={!selectedBook}
-              >
-                <SelectTrigger className="w-24">
-                  <SelectValue placeholder="Verse" />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedBook && selectedChapter && Array.from(
-                    { length: selectedBook.verses[selectedChapter] || 0 },
-                    (_, i) => (
-                      <SelectItem key={i + 1} value={(i + 1).toString()}>
-                        {i + 1}
-                      </SelectItem>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
-      
-              <Button 
-                className="bg-green-500 hover:bg-green-600 text-white"
-                disabled={!selectedBook}
-              >
-                Go
-              </Button>
-            </div>
+      <div className="flex mb-6 space-x-2">
+        <Select value={selectedBook?.id || ""} onValueChange={(id) => {
+          const book = bibleBooks.find(b => b.id === id);
+          if (book) handleBookSelect(book);
+        }}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Book" />
+          </SelectTrigger>
+          <SelectContent>
+            {filteredBooks.map((book) => (
+              <SelectItem key={book.id} value={book.id}>
+                {book.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+  
+        <Select
+          value={selectedChapter?.toString() || ""}
+          onValueChange={(value) => handleChapterSelect(parseInt(value))}
+          disabled={!selectedBook}
+        >
+          <SelectTrigger className="w-20">
+            <SelectValue placeholder="Chapter" />
+          </SelectTrigger>
+          <SelectContent>
+            {selectedBook && Array.from({ length: selectedBook.chapters }, (_, i) => (
+              <SelectItem key={i + 1} value={(i + 1).toString()}>
+                {i + 1}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+  
+        <Select
+          value={selectedVerse?.toString() || ""}
+          onValueChange={(value) => setSelectedVerse(parseInt(value))}
+          disabled={!selectedBook || !selectedChapter}
+        >
+          <SelectTrigger className="w-20">
+            <SelectValue placeholder="Verse" />
+          </SelectTrigger>
+          <SelectContent>
+            {selectedBook && selectedChapter && Array.from(
+              { length: selectedBook.verses[selectedChapter] || 0 },
+              (_, i) => (
+                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                  {i + 1}
+                </SelectItem>
+              )
+            )}
+          </SelectContent>
+        </Select>
+  
+        <Button 
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+          disabled={!selectedBook}
+        >
+          Go
+        </Button>
+      </div>
 
       {/* Bible Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-3">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="books">Books</TabsTrigger>
           <TabsTrigger value="chapters">Chapters</TabsTrigger>
           <TabsTrigger value="verses">Verses</TabsTrigger>
         </TabsList>
         
-        {/* Books Tab */}
-        <TabsContent value="books" className="flex-1 border rounded-lg p-4 mt-2 overflow-auto">
-          <div className="grid grid-cols-2 h-full">
-            <div className="border-r pr-2">
-              <h3 className="font-bold mb-2 text-center">Old Testament</h3>
-              <div className="flex flex-col space-y-1">
-                {groupedBooks.old.map(book => (
-                  <Button 
-                    key={book.id}
-                    variant="ghost"
-                    className="justify-start text-left"
-                    onClick={() => handleBookSelect(book)}
-                  >
-                    {book.name}
-                  </Button>
-                ))}
-              </div>
+        {/* Books Tab  */}
+        <TabsContent value="books" className="overflow-y-auto max-h-160 [&::-webkit-scrollbar]:hidden border-2 rounded-lg">
+          <div className="p-4">
+            
+            <h2 className="text-l font-bold text-center mb-2 text-blue-800">Old Testament</h2>
+            <div className="grid grid-cols-2 gap-1.5 mb-4">
+              {groupedBooks.old.map(book => (
+                <Button 
+                  key={book.id}
+                  variant="outline"
+                  className={`h-10  hover:bg-blue-100 ${selectedBook === book ? 'bg-blue-200' : ''}`}
+                  onClick={() => handleBookSelect(book)}
+                >
+                  {book.name}
+                </Button>
+              ))}
             </div>
-            <div className="pl-2">
-              <h3 className="font-bold mb-2 text-center">New Testament</h3>
-              <div className="flex flex-col space-y-1">
-                {groupedBooks.new.map(book => (
-                  <Button 
-                    key={book.id}
-                    variant="ghost"
-                    className={`justify-start text-left ${book.id === '3jn' ? 'text-green-500' : ''}`}
-                    onClick={() => handleBookSelect(book)}
-                  >
-                    {book.name}
-                  </Button>
-                ))}
-              </div>
+
+            <h2 className="text-l font-bold text-center mb-2 text-blue-800">New Testament</h2>
+            <div className="grid grid-cols-2 gap-1.5">
+              {groupedBooks.new.map(book => (
+                <Button 
+                  key={book.id}
+                  variant="outline"
+                  className="h-10 hover:bg-blue-100"
+                  onClick={() => handleBookSelect(book)}
+                >
+                  {book.name}
+                </Button>
+              ))}
             </div>
           </div>
         </TabsContent>
 
         {/* Chapters Tab */}
-        <TabsContent value="chapters" className="flex-1 border rounded-lg p-4 mt-2 overflow-auto">
+        <TabsContent value="chapters" className="overflow-y-auto max-h-160 [&::-webkit-scrollbar]:hidden border-2 rounded-lg p-4">
           <div className="grid grid-cols-5 gap-2">
             {getAvailableChapters().map(chapter => (
               <Button 
                 key={chapter}
                 variant="outline"
-                className={`h-12 ${chapter === 1 ? 'text-green-500 border-green-500' : ''}`}
+                // h-10 rounded-md text-center justify-center bg-blue-100 hover:bg-blue-200
+                className={`h-10  hover:bg-blue-100 ${selectedChapter === chapter ? 'bg-blue-200' : ''}`}
                 onClick={() => handleChapterSelect(chapter)}
               >
                 {chapter}
@@ -246,13 +224,13 @@ const Drawer = () => {
         </TabsContent>
 
         {/* Verses Tab */}
-        <TabsContent value="verses" className="flex-1 border rounded-lg p-4 mt-2 overflow-auto">
+        <TabsContent value="verses" className="overflow-y-auto max-h-160 [&::-webkit-scrollbar]:hidden border-2 rounded-lg p-4">
           <div className="grid grid-cols-5 gap-2">
             {getAvailableVerses().map(verse => (
               <Button 
                 key={verse}
                 variant="outline"
-                className="h-12"
+                className={`h-12  hover:bg-blue-100 ${selectedVerse === verse ? 'bg-blue-200' : ''}`}
                 onClick={() => handleVerseSelect(verse)}
               >
                 {verse}
